@@ -1,3 +1,4 @@
+#csv파일은 대회당일 제공된 데이터입니다
 #coding:utf-8
 
 from picamera.array import PiRGBArray
@@ -19,6 +20,11 @@ gpio.setup(echo, gpio.IN)
 address = ''
 temperature = 0
 
+"""
+데이터에 마지막으로 들어온 값의 시간과 
+현재 시간을 비교해 자동차 시동이 
+켜져있는지 꺼졌는지 확인하는 함수
+"""
 def handle_time():
 
     try:
@@ -61,6 +67,10 @@ def handle_time():
     except KeyboardInterrupt :
         print "False"
         gpio.cleanup()
+        
+"""
+현재 차량 위치를 데이터에서 읽어오는 함수
+"""
 
 def handle_address():
     global address
@@ -82,6 +92,10 @@ def handle_address():
     if address == '북구' or address == '동구':
         address = '서초구'
 
+"""
+파이카메라로 사진을 촬영한뒤 저장하는 함수
+"""
+        
 def handle_video():
     os.system('sudo modprobe bcm2835-v4l2')
     cap = cv2.VideoCapture(0)
@@ -98,12 +112,18 @@ def handle_video():
     cap.release()
     cv2.destroyAllWindows()
 
+"""
+촬영한 사진을 서버로 전송
+"""
 def post():
 
     files = {'photo' : open('/home/pi/workspace/detect_img.png', 'rb')}
     requests.post("http://52.78.88.51:8080/SaveUsServer/insert.do", files=files)
     print "\nSend image"
 
+"""
+마지막으로 읽어온 차량 위치를 서버로 전송
+"""    
 def post2() :
     global address 
     params = urllib.urlencode( {'address' : address })
@@ -117,6 +137,12 @@ def post2() :
     print address
     conn.close()
 
+"""
+GPIO에 연결된 초음파센서로 값을 읽어옵니다
+일정시간마다 값을 읽어오다 변화가 생기면
+움직임이 있었다 판단하여 차량내부를 촬영한 뒤
+사진을 촬영하는 함수를 실행합니다.
+"""    
 def handle_ultra():
     
     MAX_COUNT = 2
